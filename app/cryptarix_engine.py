@@ -103,3 +103,7 @@ if __name__ == "__main__":
             print(f"{token['name']} AlphaScore {score} inserted.")
         else:
             print(f"❌ Failed to fetch {symbol}")
+
+def generate_alpha_score(symbol: str) -> float:
+    # TEMP fake scoring logic
+    return len(symbol) * 3.14
