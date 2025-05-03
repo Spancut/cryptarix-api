@@ -1,57 +1,14 @@
-import psycopg2
-from datetime import datetime
+import os
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from dotenv import load_dotenv
 
-# 🔌 Connect to PostgreSQL
-def connect():
-    return psycopg2.connect(
-        host="localhost",
-        database="Cryptarix",           # 🔁 Make sure this matches your DB name exactly
-        user="postgres",                # ✅ This is the default admin user
-        password="Chantec2008!"   # 🔁 Replace with your real password
-    )
+# Load variables from .env file
+load_dotenv()
 
-# 💾 Insert a new token
-def insert_token(symbol, name, price_usd, volume_24h, alpha_score, sentiment_score, risk_level):
-    conn = connect()
-    cur = conn.cursor()
+# Get the database URL from the environment variable
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-    query = """
-    INSERT INTO tokens (symbol, name, price_usd, volume_24h, alpha_score, sentiment_score, risk_level, last_updated)
-    VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
-    """
-    cur.execute(query, (
-        symbol,
-        name,
-        price_usd,
-        volume_24h,
-        alpha_score,
-        sentiment_score,
-        risk_level,
-        datetime.now()
-    ))
-
-    conn.commit()
-    cur.close()
-    conn.close()
-    print(f"Inserted {symbol} into database.")
-
-# 📥 Read all token records
-def get_all_tokens():
-    conn = connect()
-    cur = conn.cursor()
-
-    cur.execute("SELECT symbol, name, price_usd, alpha_score FROM tokens;")
-    rows = cur.fetchall()
-
-    for row in rows:
-        symbol, name, price, score = row
-        print(f"{symbol} - {name} - ${price} - AlphaScore: {score}")
-
-    cur.close()
-    conn.close()
-
-# ✅ Uncomment to insert a new record
-# insert_token("DOGE", "Dogecoin", 0.065, 25000000, 82, 78, "medium")
-
-# 🔍 Fetch and display all records
-get_all_tokens()
+# Set up the database engine and session
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

@@ -1,40 +1,35 @@
 from fastapi import FastAPI
-from typing import List
 import psycopg2
-from pydantic import BaseModel
+from psycopg2.extras import RealDictCursor
 
 app = FastAPI()
 
-# 🔐 Replace this with your actual PostgreSQL password
-DB_PASSWORD = "Chantec2008!"
-
-class Token(BaseModel):
-    symbol: str
-    name: str
-    price_usd: float
-    alpha_score: int
-
-def connect():
-    return psycopg2.connect(
-        host="localhost",
-        database="Cryptarix",
-        user="postgres",
-        password=DB_PASSWORD
-    )
-
-@app.get("/tokens", response_model=List[Token])
+@app.get("/tokens")
 def get_tokens():
-    conn = connect()
-    cur = conn.cursor()
-    cur.execute("SELECT symbol, name, price_usd, alpha_score FROM tokens;")
-    rows = cur.fetchall()
-    cur.close()
-    conn.close()
+    try:
+        print(">> Hitting /tokens route...")
 
-    return [
-        Token(symbol=row[0], name=row[1], price_usd=row[2], alpha_score=row[3])
-        for row in rows
-    ]
+        conn = psycopg2.connect(
+            host="localhost",          # or update with actual Render config
+            database="your_db_name",   # UPDATE THIS
+            user="your_db_user",       # UPDATE THIS
+            password="your_password",  # UPDATE THIS
+            port="5432"
+        )
+
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute("SELECT symbol, name, price_usd, alpha_score FROM tokens")
+        rows = cur.fetchall()
+
+        cur.close()
+        conn.close()
+
+        return rows
+
+    except Exception as e:
+        print("🔥 ERROR in /tokens:", str(e))
+        return {"error": str(e)}
+
 @app.post("/add_token")
 def add_token(token: Token):
     conn = connect()
